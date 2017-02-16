@@ -1,6 +1,7 @@
 package com.example.t00532813.googlemapstut;
 
 import android.content.DialogInterface;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
@@ -30,6 +31,11 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.PolygonOptions;
 
+import java.security.Timestamp;
+import java.text.DateFormat;
+import java.util.Date;
+import java.util.List;
+
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback ,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
@@ -42,6 +48,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private Polygon polygon1, polygon2, polygon3;
     private PolygonOptions rectOptions1, rectOptions2, rectOptions3;
+    private boolean touched1,touched2, touched3 = false;
 
     Boolean crossed = false;
     private LocationRequest mLocationRequest;
@@ -59,6 +66,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
     }
 
     @Override
@@ -84,19 +92,29 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
-        lat1 = 50.671228;
-        long1 = -120.363413;
-        lat2 = 50.670746;
-        long2 = -120.362605;
+        lat1 = 50.671230;
+        long1 = -120.363513;
+        lat2 = 50.670750;
+        long2 = -120.362405;
 
         // Add a marker in TRU and move the camera
         LatLng kamloops = new LatLng(lat1 + (lat2-lat1)/2, long2 + (long1-long2)/2);
-        mMap.addMarker(new MarkerOptions().position(kamloops).title("Marker in Kamloops 1")
-                .icon(BitmapDescriptorFactory.fromResource(R.drawable.marker_1)));
+        /*mMap.addMarker(new MarkerOptions().position(kamloops).title("Marker in Kamloops 1")
+                .icon(BitmapDescriptorFactory.fromResource(R.drawable.marker_1)));*/
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(kamloops, 17));
+        new AlertDialog.Builder(this)
+                .setTitle("Start The Hunt")
+                .setMessage("You are starting at " + DateFormat.getDateTimeInstance().format(new Date()))
+                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        // continue with delete
+                    }
+                })
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .show();
 
 
-        // Add a polygon
+        /*// Add a polygon
         rectOptions = new PolygonOptions()
                 .add(   new LatLng(lat1, long1),
                         new LatLng(lat1, long2),
@@ -107,14 +125,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             rectOptions.fillColor(Color.argb(20, 255, 80, 255));
         }
         // Get back the mutable Polygon
-        polygon = mMap.addPolygon(rectOptions);
+        rectOptions.fillColor(Color.GREEN);
+        polygon = mMap.addPolygon(rectOptions);*/
 
 
         rectOptions1 = new PolygonOptions()
-                .add(   new LatLng(50.670783, -120.361910),
-                        new LatLng(50.670790, -120.362407),
-                        new LatLng(50.670591, -120.362446),
-                        new LatLng(50.670593, -120.361965));
+                .add(   new LatLng(50.670783, -120.362407),
+                        new LatLng(50.670790, -120.361910),
+                        new LatLng(50.670591, -120.361965),
+                        new LatLng(50.670593, -120.362446));
 
         rectOptions1.strokeColor(-65536);
         rectOptions1.fillColor(Color.argb(20, 255, 80, 255));
@@ -302,9 +321,59 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             //mLastLocation = location;
             lattitude = location.getLatitude();
             longitude = location.getLongitude();
-            if (lattitude <= lat1 && lattitude >= lat2 && longitude <= long2 && longitude >= long1){
-                Toast.makeText(getBaseContext(),"Current Location: Lat = " + lattitude + ", and longitude = " + longitude, Toast.LENGTH_SHORT).show();
+
+            //Check in poly2
+            if (polygon2!=null && isInside(polygon2,lattitude,longitude) && !touched2) {
+                polygon2.setStrokeColor(Color.GREEN);
+                touched2 = true;
+                Toast.makeText(getBaseContext(),"You found the first point!", Toast.LENGTH_SHORT).show();
             }
+            //Check in poly1
+            if (polygon1!=null &&isInside(polygon1,lattitude,longitude) && !touched1) {
+                if (touched2) {
+                    polygon1.setStrokeColor(Color.GREEN);
+                    touched1 = true;
+                    Toast.makeText(getBaseContext(), "You found the second point!", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getBaseContext(), "Come Back Later.", Toast.LENGTH_SHORT).show();
+                }
+            }
+            //Check in poly3
+            if (polygon3!=null &&isInside(polygon3,lattitude,longitude) && !touched3) {
+                if (touched2 && touched1) {
+                    polygon3.setStrokeColor(Color.GREEN);
+                    touched3 = true;
+                    Toast.makeText(getBaseContext(), "You found the last point!", Toast.LENGTH_SHORT).show();
+                    new AlertDialog.Builder(this)
+                            .setTitle("You did it!")
+                            .setMessage("You completed the hunt at  " + DateFormat.getDateTimeInstance().format(new Date()))
+                            .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int which) {
+                                    // continue with delete
+                                }
+                            })
+                            .setIcon(android.R.drawable.ic_dialog_alert)
+                            .show();
+
+                } else {
+                    Toast.makeText(getBaseContext(), "Come Back Later.", Toast.LENGTH_SHORT).show();
+                }
+            }
+            //isInside(polygon, lattitude, longitude);
+            /*if (lattitude <= lat1 && lattitude >= lat2 && longitude <= long2 && longitude >= long1){
+                Toast.makeText(getBaseContext(),"Current Location: Lat = " + lattitude + ", and longitude = " + longitude, Toast.LENGTH_SHORT).show();
+            }*/
         }
+    }
+
+    public boolean isInside(Polygon polygon, double lat, double longitude) {
+        List<LatLng> points = polygon.getPoints();
+
+        //Toast.makeText(getBaseContext(),points.get(0)+", "+points.get(1)+", "+points.get(2)+", "+points.get(3), Toast.LENGTH_SHORT).show();
+        if (lat <= points.get(0).latitude && lat >= points.get(2).latitude && longitude <= points.get(1).longitude && longitude >= points.get(0).longitude){
+            //Toast.makeText(getBaseContext(),"Current Location: Lat = " + lattitude + ", and longitude = " + longitude, Toast.LENGTH_SHORT).show();
+            return true;
+        }
+        return false;
     }
 }
