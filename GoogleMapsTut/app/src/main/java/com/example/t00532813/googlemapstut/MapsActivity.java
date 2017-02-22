@@ -58,6 +58,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     double lattitude;
     double longitude;
     double lat1,long1,lat2,long2;
+    Date startTime;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -98,16 +99,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         long2 = -120.362405;
 
         // Add a marker in TRU and move the camera
-        LatLng kamloops = new LatLng(lat1 + (lat2-lat1)/2, long2 + (long1-long2)/2);
+        LatLng kamloops = new LatLng(50.670504,-120.361911);
         /*mMap.addMarker(new MarkerOptions().position(kamloops).title("Marker in Kamloops 1")
                 .icon(BitmapDescriptorFactory.fromResource(R.drawable.marker_1)));*/
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(kamloops, 17));
         new AlertDialog.Builder(this)
                 .setTitle("Start The Hunt")
-                .setMessage("You are starting at " + DateFormat.getDateTimeInstance().format(new Date()))
+                .setMessage("Touch the boxes in the right order to win.\nPress OK to start.")
                 .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
-                        // continue with delete
+                        startTime = new Date();
                     }
                 })
                 .setIcon(android.R.drawable.ic_dialog_alert)
@@ -322,6 +323,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             lattitude = location.getLatitude();
             longitude = location.getLongitude();
 
+
             //Check in poly2
             if (polygon2!=null && isInside(polygon2,lattitude,longitude) && !touched2) {
                 polygon2.setStrokeColor(Color.GREEN);
@@ -346,7 +348,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     Toast.makeText(getBaseContext(), "You found the last point!", Toast.LENGTH_SHORT).show();
                     new AlertDialog.Builder(this)
                             .setTitle("You did it!")
-                            .setMessage("You completed the hunt at  " + DateFormat.getDateTimeInstance().format(new Date()))
+                            .setMessage("You completed the hunt in  " + (new Date().getTime() - startTime.getTime()))
                             .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog, int which) {
                                     // continue with delete
